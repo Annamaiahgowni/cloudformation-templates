@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template to create an ECR repository named docker-dev-images"
+
+Resources:
+  DockerDevImagesECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: docker-dev-images
+      ImageScanningConfiguration:
+        ScanOnPush: true  # Enables automatic scanning for vulnerabilities
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Expire untagged images older than 14 days",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 14
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:
+        - Key: Name
+          Value: docker-dev-images
+        - Key: Environment
+          Value: Development
+
+Outputs:
+  ECRRepositoryURI:
+    Description: "The URI of the created ECR repository"
+    Value: !GetAtt DockerDevImagesECR.RepositoryUri
